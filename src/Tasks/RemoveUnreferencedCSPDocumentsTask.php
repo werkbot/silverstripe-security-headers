@@ -2,6 +2,7 @@
 
 namespace Signify\Tasks;
 
+use Override;
 use Signify\Jobs\RemoveUnreferencedCSPDocumentJob;
 use SilverStripe\Dev\BuildTask;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
@@ -26,6 +27,7 @@ class RemoveUnreferencedCSPDocumentsTask extends BuildTask
         print "Job queued with ID $jobId\n";
     }
 
+    #[Override]
     public function isEnabled()
     {
         return parent::isEnabled() && class_exists(QueuedJobService::class);

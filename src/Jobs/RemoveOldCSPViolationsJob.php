@@ -1,6 +1,7 @@
 <?php
 namespace Signify\Jobs;
 
+use Override;
 use DateInterval;
 use DateTime;
 use Signify\Models\CSPViolation;
@@ -23,6 +24,7 @@ class RemoveOldCSPViolationsJob extends AbstractQueuedJob
      */
     private static $retention_period = 'P1M';
 
+    #[Override]
     public function setup()
     {
         $retention = Config::inst()->get(self::class, 'retention_period');

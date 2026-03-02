@@ -2,18 +2,18 @@
 
 namespace Signify\Forms\Validators;
 
+use SilverStripe\Forms\Validation\Validator;
 use Signify\Forms\GridField\GridFieldDeleteRelationsButton;
-use SilverStripe\Forms\Validator;
 
 class GridFieldDeleteRelationsValidator extends Validator
 {
     public function php($data)
     {
         $valid = true;
-        $filters = array();
+        $filters = [];
         // Check for checked filter checkboxes.
         foreach ($data as $key => $value) {
-            if (preg_match('/' . GridFieldDeleteRelationsButton::FILTER_BY_SUFFIX . '$/', $key) && $value) {
+            if (preg_match('/' . GridFieldDeleteRelationsButton::FILTER_BY_SUFFIX . '$/', (string) $key) && $value) {
                 $filters[] = $key;
             }
         }

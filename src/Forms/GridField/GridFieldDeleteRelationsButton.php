@@ -2,6 +2,8 @@
 
 namespace Signify\Forms\GridField;
 
+use BadMethodCallException;
+use SilverStripe\Forms\CompositeField;
 use Signify\Forms\Validators\GridFieldDeleteRelationsValidator;
 use SilverStripe\Forms\GridField\GridField_HTMLProvider;
 use SilverStripe\Forms\GridField\GridField_URLHandler;
@@ -36,11 +38,6 @@ class GridFieldDeleteRelationsButton implements GridField_HTMLProvider, GridFiel
 {
     use Injectable;
     use Extensible;
-
-    /**
-     * Fragment to write the button to
-     */
-    protected $targetFragment;
 
     /**
      * @var GridField
@@ -115,9 +112,8 @@ class GridFieldDeleteRelationsButton implements GridField_HTMLProvider, GridFiel
     /**
      * @param string $targetFragment The HTML fragment to write the button into
      */
-    public function __construct($targetFragment = "after")
+    public function __construct(protected $targetFragment = "after")
     {
-        $this->targetFragment = $targetFragment;
     }
 
     /**
@@ -138,8 +134,8 @@ class GridFieldDeleteRelationsButton implements GridField_HTMLProvider, GridFiel
         $hasMessage = $form && $form->getMessage();
 
         // Render modal
-        $template = SSViewer::get_templates_by_class(__CLASS__, '_Modal');
-        $viewer = new ArrayData([
+        $template = SSViewer::get_templates_by_class(self::class, '_Modal');
+        $viewer = ArrayData::create([
             'ModalTitle' => $this->getModalTitle(),
             'ModalID' => $modalID,
             'ModalForm' => $form,
@@ -147,13 +143,7 @@ class GridFieldDeleteRelationsButton implements GridField_HTMLProvider, GridFiel
         $modal = $viewer->renderWith($template)->forTemplate();
 
         // Build action button
-        $button = new GridField_FormAction(
-            $gridField,
-            'deletionForm',
-            "Delete {$this->getDummyObject()->plural_name()}",
-            'deletionForm',
-            null
-        );
+        $button = GridField_FormAction::create($gridField, 'deletionForm', "Delete {$this->getDummyObject()->plural_name()}", 'deletionForm', null);
         $button
         ->addExtraClass('btn btn-outline-danger font-icon-trash btn--icon-large action_import')
         ->setForm($gridField->getForm())
@@ -208,22 +198,14 @@ class GridFieldDeleteRelationsButton implements GridField_HTMLProvider, GridFiel
 
         $fields = $this->getPreparedFilterFields();
 
-        $actions = new FieldList(
-            FormAction::create('delete', _t(
-                self::class . '.DELETE',
-                'Delete {pluralName}',
-                ['pluralName' => $dummyObj->plural_name()]
-            ))
-            ->addExtraClass('btn btn-danger font-icon-trash')
-        );
+        $actions = FieldList::create(FormAction::create('delete', _t(
+            self::class . '.DELETE',
+            'Delete {pluralName}',
+            ['pluralName' => $dummyObj->plural_name()]
+        ))
+        ->addExtraClass('btn btn-danger font-icon-trash'));
 
-        $form = new Form(
-            $gridField,
-            'deletionForm',
-            $fields,
-            $actions,
-            new GridFieldDeleteRelationsValidator()
-        );
+        $form = Form::create($gridField, 'deletionForm', $fields, $actions, GridFieldDeleteRelationsValidator::create());
         $form->setFormAction($gridField->Link('delete'));
         if ($form->getMessage()) {
             $form->addExtraClass('validationerror');
@@ -249,7 +231,7 @@ class GridFieldDeleteRelationsButton implements GridField_HTMLProvider, GridFiel
         }
         $form = $this->DeletionForm($gridField);
         $form->loadDataFrom($data);
-        $validationResult = $form->validationResult();
+        $validationResult = $form->validate();
         if (!$validationResult->isValid()) {
             $form->setSessionValidationResult($validationResult);
             $form->setSessionData($data);
@@ -257,10 +239,10 @@ class GridFieldDeleteRelationsButton implements GridField_HTMLProvider, GridFiel
         }
 
         // Prepare filters based on user input.
-        $filters = array();
+        $filters = [];
         foreach ($data as $key => $value) {
             // If this fields is a "filter by" field, and the value is truthy, add the filter.
-            if (preg_match('/' . self::FILTER_BY_SUFFIX . '$/', $key) && $value) {
+            if (preg_match('/' . self::FILTER_BY_SUFFIX . '$/', (string) $key) && $value) {
                 $fieldName = str_replace(self::FILTER_BY_SUFFIX, '', $key);
                 $filterType = $data[$fieldName . self::OPTION_FIELD_SUFFIX];
                 if (empty($filterType)) {
@@ -280,7 +262,7 @@ class GridFieldDeleteRelationsButton implements GridField_HTMLProvider, GridFiel
         }
         $filters['ID'] = $list->column('ID');
         if (empty($filters['ID'])) {
-            $deletions = new ArrayList();
+            $deletions = ArrayList::create();
         } else {
             $deletions = $gridField->getModelClass()::get()->filter($filters);
         }
@@ -349,7 +331,7 @@ class GridFieldDeleteRelationsButton implements GridField_HTMLProvider, GridFiel
             $fields = FieldList::create($fields);
         }
         if (!$fields instanceof FieldList) {
-            throw new \BadMethodCallException('"fields" must be a FieldList or array.');
+            throw new BadMethodCallException('"fields" must be a FieldList or array.');
         }
 
         $this->filterFields = $fields;
@@ -441,7 +423,7 @@ class GridFieldDeleteRelationsButton implements GridField_HTMLProvider, GridFiel
      * necessary filter fields to support the given field.
      *
      * @param FormField $field
-     * @return \SilverStripe\Forms\CompositeField
+     * @return CompositeField
      */
     protected function getFieldAsComposite(FormField $field)
     {
@@ -531,7 +513,7 @@ class GridFieldDeleteRelationsButton implements GridField_HTMLProvider, GridFiel
     /**
      * Returns a singleton of the class held by the gridfield.
      *
-     * @return \SilverStripe\ORM\DataObject
+     * @return DataObject
      */
     protected function getDummyObject()
     {
@@ -551,16 +533,14 @@ class GridFieldDeleteRelationsButton implements GridField_HTMLProvider, GridFiel
     protected function parseQueryString($data)
     {
         if (empty($data)) {
-            return array();
+            return [];
         }
         $data = urldecode($data);
 
-        $data = preg_replace_callback('/(?:^|(?<=&))[^=[]+/', function ($match) {
-            return bin2hex(urldecode($match[0]));
-        }, $data);
+        $data = preg_replace_callback('/(?:^|(?<=&))[^=[]+/', fn($match) => bin2hex(urldecode((string) $match[0])), $data);
 
-        parse_str($data, $result);
+        parse_str((string) $data, $result);
 
-        return array_combine(array_map('hex2bin', array_keys($result)), $result);
+        return array_combine(array_map(hex2bin(...), array_keys($result)), $result);
     }
 }

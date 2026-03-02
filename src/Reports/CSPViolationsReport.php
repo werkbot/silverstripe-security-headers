@@ -2,6 +2,7 @@
 
 namespace Signify\Reports;
 
+use Override;
 use SilverStripe\Reports\Report;
 use Signify\Models\CSPViolation;
 use SilverStripe\Forms\GridField\GridFieldDeleteAction;
@@ -23,15 +24,17 @@ class CSPViolationsReport extends Report
      */
     private static $deletion_batch_size = 50;
 
+    #[Override]
     public function title()
     {
-        return _t(__CLASS__ . '.TITLE', 'CSP violations');
+        return _t(self::class . '.TITLE', 'CSP violations');
     }
 
+    #[Override]
     public function description()
     {
         $desc = _t(
-            __CLASS__ . '.DESCRIPTION',
+            self::class . '.DESCRIPTION',
             'Lists violations caught by the Content Security Policy.'
             . ' For more details see <a href="{url}" target="_blank">the MDN documentation</a>.',
             ['url' => 'https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP#Violation_report_syntax']
@@ -44,6 +47,7 @@ class CSPViolationsReport extends Report
         return CSPViolation::get();
     }
 
+    #[Override]
     public function getReportField()
     {
         Requirements::css('signify-nz/silverstripe-security-headers:client/dist/main.css');

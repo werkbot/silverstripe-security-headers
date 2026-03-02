@@ -36,7 +36,7 @@ class CSPViolationsController extends Controller
 
         // Depending on which directive was used to generate the report, the format will be slightly different.
         // We must do some pre-processing on the report to normalise the data.
-        $json = json_decode($request->getBody(), true);
+        $json = json_decode((string) $request->getBody(), true);
         if (isset($json['csp-report'])) {
             // This report was sent as a result of the "report-uri" directive.
             $report = $json['csp-report'];
@@ -196,7 +196,7 @@ class CSPViolationsController extends Controller
      */
     protected function normaliseDateTime($datetime)
     {
-        return preg_replace('/(\d{4}-\d{2}-\d{2} \d{2}:\d{2}):\d{2}/', '$1', $datetime);
+        return preg_replace('/(\d{4}-\d{2}-\d{2} \d{2}:\d{2}):\d{2}/', '$1', (string) $datetime);
     }
 
     /**

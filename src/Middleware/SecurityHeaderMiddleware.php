@@ -25,7 +25,7 @@ class SecurityHeaderMiddleware implements HTTPMiddleware
      * @var array
      */
     private static $headers = [
-        'global' => array(),
+        'global' => [],
     ];
 
     /**
@@ -115,7 +115,7 @@ class SecurityHeaderMiddleware implements HTTPMiddleware
             if (empty($value)) {
                 continue;
             }
-            $value = preg_replace('/\v/', '', $value);
+            $value = preg_replace('/\v/', '', (string) $value);
             $this->extend('updateHeader', $header, $value, $request);
             if ($value) {
                 $response->addHeader($header, $value);
@@ -223,10 +223,10 @@ class SecurityHeaderMiddleware implements HTTPMiddleware
         if ($this->isReporting()) {
             // Add or update report-uri directive.
             if($cspHeader) {
-                if (strpos($cspHeader, 'report-uri')) {
+                if (strpos((string) $cspHeader, 'report-uri')) {
                     $cspHeader = str_replace('report-uri', $this->getReportURIDirective(), $cspHeader);
                 } else {
-                    $cspHeader = rtrim($cspHeader, ';') . "; {$this->getReportURIDirective()};";
+                    $cspHeader = rtrim((string) $cspHeader, ';') . "; {$this->getReportURIDirective()};";
                 }
             }
             else {
@@ -235,7 +235,7 @@ class SecurityHeaderMiddleware implements HTTPMiddleware
             // Add report-to directive.
             // Note that unlike report-uri, only the first endpoint is used if multiple are declared.
             if ($this->config()->get('use_report_to')) {
-                if (strpos($cspHeader, 'report-to') === false) {
+                if (!str_contains($cspHeader, 'report-to')) {
                     $cspHeader = rtrim($cspHeader, ';') . "; {$this->getReportToDirective()};";
                 }
             }

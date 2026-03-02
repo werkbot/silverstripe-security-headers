@@ -2,6 +2,7 @@
 
 namespace Signify\Tasks;
 
+use Override;
 use DateInterval;
 use Signify\Jobs\RemoveOldCSPViolationsJob;
 use SilverStripe\Core\Config\Config;
@@ -29,6 +30,7 @@ class RemoveOldCSPViolationsTask extends BuildTask
      * {@inheritDoc}
      * @see \SilverStripe\Dev\BuildTask::getDescription()
      */
+    #[Override]
     public function getDescription()
     {
         // Map DateInterval fields to text names. Order is significant.
@@ -70,6 +72,7 @@ class RemoveOldCSPViolationsTask extends BuildTask
             $duration_string . ' will be removed.';
     }
 
+    #[Override]
     public function isEnabled()
     {
         return parent::isEnabled() && class_exists(QueuedJobService::class);

@@ -1,6 +1,7 @@
 <?php
 namespace Signify\Jobs;
 
+use Override;
 use Signify\Models\CSPDocument;
 use Signify\Models\CSPViolation;
 use Signify\Reports\CSPViolationsReport;
@@ -12,6 +13,7 @@ use SilverStripe\ORM\DB;
 class RemoveUnreferencedCSPDocumentJob extends AbstractQueuedJob
 {
 
+    #[Override]
     public function setup()
     {
         $this->lastSeenID = -1;
@@ -72,7 +74,7 @@ class RemoveUnreferencedCSPDocumentJob extends AbstractQueuedJob
     {
         return CSPDocument::get()
             ->filter(['ID:GreaterThan' => $this->lastSeenID])
-            ->sort('ID');
+            ->sort(['ID' => 'ASC']);
     }
 }
 
